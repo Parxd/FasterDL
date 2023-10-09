@@ -1,8 +1,5 @@
-# Ignore extension-less binaries
-
-
-/CMakeFiles/
 /cmake-build-debug/
+Makefile
 
 # CUDA
 *.i
