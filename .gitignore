@@ -1,8 +1,4 @@
-# Ignore extension-less binaries
-*
-!*.*
-!*/
-
+# CUDA
 *.i
 *.ii
 *.gpu
@@ -33,6 +29,7 @@ CTestTestfile.cmake
 _deps
 
 # C++
+# -------------
 # Prerequisites
 *.d
 
@@ -67,3 +64,9 @@ _deps
 *.app
 
 /cmake-build-debug/
+
+# Ignore extension-less binaries
+*
+!*.*
+!*/
+!Dockerfile
