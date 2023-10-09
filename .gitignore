@@ -1,4 +1,12 @@
+*
+!*.*
+!*/
+
+# CMake
 /cmake-build-debug/
+/CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
 Makefile
 
 # CUDA
@@ -38,3 +46,4 @@ Makefile
 *.exe
 *.out
 *.app
+
