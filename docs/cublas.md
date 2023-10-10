@@ -1,4 +1,4 @@
-# "Essentials" for cuBLAS programming
+# "essentials" for cuBLAS programming
 
 - handle & stream
 - `m`, `n`, `k`
