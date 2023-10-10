@@ -7,8 +7,8 @@ Follow my progress on this library on my blog [here]().
 
 To setup Docker image and run container instance:
 ```docker
-sudo docker build -t <IMAGE-NAME>:<TAG> .
-sudo docker run -it --rm --gpus all -v.:/<VOLUME-NAME> <IMAGE-NAME>
+~$ sudo docker build -t <IMAGE-NAME>:<TAG> .
+~$ sudo docker run -it --rm --gpus all -v.:/<VOLUME-NAME> <IMAGE-NAME>
 ```
 
 Please note that you must have...
