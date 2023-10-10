@@ -1,5 +1,5 @@
 # FasterDL
-A collection of GPU-accelerated deep learning algorithms using cuBLAS & CUDA.
+A collection of GPU-accelerated deep learning algorithms using cuBLAS & cuDNN.
 
 Follow my progress on this library on my blog [here]().
 
