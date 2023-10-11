@@ -16,49 +16,7 @@ int main(int argc, char *argv[]) {
     const d_type alpha = 1.0;
     const d_type beta = 0.0;
 
-    int m = 3;
-    int n = 2;
-    int k = 2;
-
-    d_type W[6]{1, 2, 3, 4, 5, 6};
-    d_type X[6]{10, 11, 12, 13, 14, 15};
-    d_type Z[4];
-    d_type B[3];
-
-    d_type* d_W;
-    d_type* d_X;
-    d_type* d_Z;
-    CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_W), sizeof(W)));
-    CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_X), sizeof(X)));
-    CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_Z), sizeof(Z)));
-    CUDA_CHECK(cudaMemcpyAsync(d_W, W, sizeof(W), cudaMemcpyHostToDevice, stream));
-    CUDA_CHECK(cudaMemcpyAsync(d_X, X, sizeof(X), cudaMemcpyHostToDevice, stream));
-
-    CUBLAS_CHECK(
-        cublasDgemm(
-            cublasH, 
-            CUBLAS_OP_N, 
-            CUBLAS_OP_N, 
-            2, 2, 3, 
-            &alpha, 
-            d_X, 2,
-            d_W, 3, 
-            &beta,
-            d_Z, 2
-        )
-    );
-
-    CUDA_CHECK(cudaMemcpyAsync(Z, d_Z, sizeof(Z), cudaMemcpyDeviceToHost, stream));
-    CUDA_CHECK(cudaStreamSynchronize(stream));
-
-    CUDA_CHECK(cudaFree(d_W));
-    CUDA_CHECK(cudaFree(d_X));
-    CUDA_CHECK(cudaFree(d_Z));
-    CUBLAS_CHECK(cublasDestroy(cublasH));
-    CUDA_CHECK(cudaStreamDestroy(stream));
-    CUDA_CHECK(cudaDeviceReset());
-
-    print_matrix(2, 2, Z, 2);
+	
 
     return EXIT_SUCCESS;
 }
