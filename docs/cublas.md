@@ -88,6 +88,8 @@ suppose we take `A`, do stuff w/ it in CM-based, and want to convert it to RM-ba
 - switch r & c
 - `A` becomes the *transpose* of itself in CM-based, now in RM-based
 
+**NIMPORTANT**: A x B = (B<sup>T</sup> x A<sup>T</sup>)<sup>T</sup>
+
 ## `alpha`, `beta` values
 ```c++
 float alpha = 1.0;

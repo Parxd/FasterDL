@@ -16,17 +16,18 @@ int main(int argc, char *argv[]) {
     const d_type alpha = 1.0;
     const d_type beta = 0.0;
 
-    int m = 1;
-    int n = 1;
-    int k = 3;
-    d_type W[m * k]{0.5, 0.5, 0.5};
-    d_type X[k * n]{2,   2,   2  };
-    d_type Z[m * n]{0};
+    int m = 3;
+    int n = 2;
+    int k = 2;
+
+    d_type W[6]{1, 2, 3, 4, 5, 6};
+    d_type X[6]{10, 11, 12, 13, 14, 15};
+    d_type Z[4];
+    d_type B[3];
 
     d_type* d_W;
     d_type* d_X;
     d_type* d_Z;
-
     CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_W), sizeof(W)));
     CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_X), sizeof(X)));
     CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_Z), sizeof(Z)));
@@ -38,12 +39,12 @@ int main(int argc, char *argv[]) {
             cublasH, 
             CUBLAS_OP_N, 
             CUBLAS_OP_N, 
-            m, n, k, 
+            2, 2, 3, 
             &alpha, 
-            d_W, 1, 
-            d_X, 3, 
-            &beta, 
-            d_Z, 1
+            d_X, 2,
+            d_W, 3, 
+            &beta,
+            d_Z, 2
         )
     );
 
@@ -57,7 +58,7 @@ int main(int argc, char *argv[]) {
     CUDA_CHECK(cudaStreamDestroy(stream));
     CUDA_CHECK(cudaDeviceReset());
 
-    print_matrix(m, n, Z, 1);
+    print_matrix(2, 2, Z, 2);
 
     return EXIT_SUCCESS;
 }
