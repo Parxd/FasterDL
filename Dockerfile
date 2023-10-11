@@ -17,7 +17,7 @@ RUN apt-get update &&  \
 
 # Dir setup
 WORKDIR /app
-# COPY . /cuda-playground
+# COPY . /app
 
 # Build
 # RUN mkdir build && \

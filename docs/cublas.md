@@ -50,6 +50,8 @@ leading dimensions, equal to number of rows in column-major systems
 
 essentially number of elements that are processed per "time" when data is laid sequentially
 
+in column-major like cuBLAS, its the number of elements taken and placed in a column vertically
+
 for ex:
 - 2x3 matrix as vector (rows = 2, cols = 3):
 
@@ -91,6 +93,7 @@ suppose we take `A`, do stuff w/ it in CM-based, and want to convert it to RM-ba
 float alpha = 1.0;
 float beta = 0.0;
 ```
+- MUST BE IN SAME D_TYPE as matrix data
 - passed by ref. to most of cublas API
 - `alpha` scales one of the input matrices `A` or `B`; results in the same `C` matrix regardless
 - `beta` scales the output matrix `C` before `A x B` is computed into it
@@ -100,8 +103,13 @@ float beta = 0.0;
 
 ## host data
 ```c++
-const std::vector<data_type> A = {1.0, 2.0, 3.0, 4.0};
-const std::vector<data_type> B = {5.0, 6.0, 7.0, 8.0};
-std::vector<data_type> C(m * n, 0);
+const std::vector<double> A = {1.0, 2.0, 3.0, 4.0};
+const std::vector<double> B = {5.0, 6.0, 7.0, 8.0};
+std::vector<double> C(m * n, 0);
 ```
-
+**OR**
+```c++
+double A[m * k];
+double B[k * n];
+double C[m * n];
+```
