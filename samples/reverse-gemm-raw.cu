@@ -16,13 +16,12 @@ int main(int argc, char *argv[]) {
     const d_type alpha = 1.0;
     const d_type beta = 0.0;
 
-    int m = 3;
-    int n = 2;
-    int k = 2;
-
-    d_type W[6]{1, 2, 3, 4, 5, 6};
-    d_type X[6]{10, 11, 12, 13, 14, 15};
-    d_type Z[4];
+    const int m = 3;
+    const int n = 2;
+    const int k = 2;
+    d_type W[k * m]{1, 2, 3, 4, 5, 6};
+    d_type X[m * n]{10, 11, 12, 13, 14, 15};
+    d_type Z[k * n];
 
     d_type* d_W;
     d_type* d_X;
@@ -32,7 +31,7 @@ int main(int argc, char *argv[]) {
     CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_Z), sizeof(Z)));
     CUDA_CHECK(cudaMemcpyAsync(d_W, W, sizeof(W), cudaMemcpyHostToDevice, stream));
     CUDA_CHECK(cudaMemcpyAsync(d_X, X, sizeof(X), cudaMemcpyHostToDevice, stream));
-
+    
     // Reverse GEMM to compute (row-major) transposed Z
     CUBLAS_CHECK(
         cublasDgemm(
@@ -58,7 +57,7 @@ int main(int argc, char *argv[]) {
     CUDA_CHECK(cudaStreamDestroy(stream));
     CUDA_CHECK(cudaDeviceReset());
 
-    print_matrix(2, 2, Z, 2);
+    print_matrix(k, n, Z, k);
 
     return EXIT_SUCCESS;
 }
