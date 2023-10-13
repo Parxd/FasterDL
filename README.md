@@ -17,5 +17,3 @@ Please note that you must have...
 - [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/1.14.1/index.html)
 
 ---
-
-This is ViM.
