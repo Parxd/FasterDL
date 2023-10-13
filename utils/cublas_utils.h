@@ -16,9 +16,6 @@
 #include <cuda_runtime_api.h>
 #include <library_types.h>
 
-#include <thrust/host_vector.h>
-#include <thrust/device_vector.h>
-
 // CUDA API error checking
 #define CUDA_CHECK(err)                                                                            \
     do {                                                                                           \
@@ -121,28 +118,6 @@ template <> struct traits<cuDoubleComplex> {
 
     inline static T mul(T v, double f) { return make_cuDoubleComplex(v.x * f, v.y * f); }
 };
-
-// Print Thrust host matrix
-template <typename T>
-void print_host_thrust(const int &m, const int &n, thrust::host_vector<T> V, const int &lda) {
-    for (int i = 0; i < m; i++) {
-        for (int j = 0; j < n; j++) {
-            std::cout << std::fixed << std::setprecision(2) << V.data()[j * lda + i] << " ";
-        }
-        std::cout << "\n";
-    }
-}
-
-// Print Thrust device matrix
-template <typename T>
-void print_device_thrust(const int &m, const int &n, thrust::device_vector<T> V, const int &lda) {
-    for (int i = 0; i < m; i++) {
-        for (int j = 0; j < n; j++) {
-            std::cout << std::fixed << std::setprecision(2) << V.data()[j * lda + i] << " ";
-        }
-        std::cout << "\n";
-    }
-}
 
 template <typename T> void print_matrix(const int &m, const int &n, const T *A, const int &lda);
 

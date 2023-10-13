@@ -4,7 +4,7 @@
 #include <cuda_runtime.h>
 #include <thrust/device_vector.h>
 
-#include "../include/cublas_utils.h"
+#include "../utils/cublas_utils.h"
 
 using d_type = double;
 
