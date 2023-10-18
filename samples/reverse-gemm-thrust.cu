@@ -7,6 +7,7 @@
 #include <thrust/device_vector.h>
 
 #include "../utils/cublas_utils.h"
+#include "../utils/thrust_utils.h"
 
 using d_type = double;
 
