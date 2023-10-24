@@ -10,7 +10,7 @@ To setup Docker image and run container instance:
 ~$ sudo docker build -t <IMAGE-NAME>:<TAG> .
 ~$ sudo docker run -it --rm --gpus all -v.:/<VOLUME-NAME> <IMAGE-NAME>
 ```
-or if you're using VSCode, use the Dev Container extension pack and open the root in container *(recommended)*.
+...or if you're using VSCode, just use the Dev Container extension pack and open the root in container *(recommended)*.
 
 ---
 
