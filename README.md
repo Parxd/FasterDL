@@ -14,6 +14,7 @@ or if you're using VSCode...
 
 Use the Dev Container extension pack and open the root in container.
 
+---
 
 Please note that you must have...
 - NVIDIA CUDA-compatible GPU with compute capability of at least 3.0
