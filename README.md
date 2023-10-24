@@ -6,10 +6,13 @@ Follow my progress on this library on my blog [here]().
 ---
 
 To setup Docker image and run container instance:
-```docker
+```
 ~$ sudo docker build -t <IMAGE-NAME>:<TAG> .
 ~$ sudo docker run -it --rm --gpus all -v.:/<VOLUME-NAME> <IMAGE-NAME>
 ```
+...or if you're using VSCode, just use the Dev Container extension pack and open the root in container *(recommended)*.
+
+---
 
 Please note that you must have...
 - NVIDIA CUDA-compatible GPU with compute capability of at least 3.0
