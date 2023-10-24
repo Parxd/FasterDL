@@ -24,22 +24,61 @@ int main(int argc, char *argv[]) {
     const d_type alpha = 1.0;
     const d_type beta = 0.0;
     
-    // 3,4
-    // 4,2
-    const int l1 = 3;
-    const int l2 = 4;
-    const int l3 = 2;
-    thrust::host_vector<d_type> W1(l1 * l2);
-    thrust::host_vector<d_type> W2(l2 * l3);
-    thrust::host_vector<d_type> B1(l2);
-    thrust::host_vector<d_type> B2(l3);
-    thrust::generate(W1.begin(), W1.end(), random_norm<d_type>);
-    thrust::generate(W2.begin(), W2.end(), random_norm<d_type>);
-    thrust::generate(B1.begin(), B1.end(), random_norm<d_type>);
-    thrust::generate(B2.begin(), B2.end(), random_norm<d_type>);
-    
+    const int l1 = 2;
+    const int l2 = 2;
+    thrust::host_vector<d_type> W1 = {0.15, 0.20, 0.25, 0.30}; // layer 1 weights
+    thrust::host_vector<d_type> W2 = {0.40, 0.45, 0.50, 0.55}; // layer 2 weights
+    thrust::host_vector<d_type> b1 = {0.35, 0.35}; 
+    thrust::host_vector<d_type> b2 = {0.60, 0.60};
 
-    print_host_thrust(l1, l2, W1, l1);
+    thrust::host_vector<d_type> in = {0.05, 0.10};
+    thrust::host_vector<d_type> out(2);
+
+    // print_host_thrust(1, 2, in, 1);
+    // print_host_thrust(l1, l2, W1, l1);
+    thrust::device_vector<d_type> d_in = in;
+    thrust::device_vector<d_type> d_W1 = W1;
+    thrust::device_vector<d_type> d_W2 = W2;
+    thrust::device_vector<d_type> d_b1 = b1;
+    thrust::device_vector<d_type> d_b2 = b2;
+    thrust::device_vector<d_type> d_imdte_out = out;
+    thrust::device_vector<d_type> d_out(2);
+
+    const int m = 2;
+    const int n = 2;
+    const int k = 1;
+
+    CUBLAS_CHECK(
+        cublasDgemm(
+            cublasH, 
+            CUBLAS_OP_N, 
+            CUBLAS_OP_N, 
+            n, k, m, 
+            &alpha, 
+            thrust::raw_pointer_cast(&d_in[0]), n,
+            thrust::raw_pointer_cast(&d_W1[0]), m, 
+            &beta,
+            thrust::raw_pointer_cast(&d_imdte_out[0]), n
+        )
+    );
+    // cudaDeviceSynchronize();  // don't need this since we're using cublas stream?
+    CUBLAS_CHECK(
+        cublasDgeam(
+            cublasH,
+            CUBLAS_OP_N,
+            CUBLAS_OP_N,
+            m, n,
+            &alpha,
+            thrust::raw_pointer_cast(&d_imdte_out[0]), m,
+            &beta,
+            thrust::raw_pointer_cast(&b1[0]), n,
+            thrust::raw_pointer_cast(&d_out[0]), m
+        )
+    );
+    cudaStreamSynchronize(stream);
+    CUBLAS_CHECK(cublasDestroy(cublasH));
+    CUDA_CHECK(cudaStreamDestroy(stream));
+    print_device_thrust<d_type>(1, 2, d_out, 1);
 
     return EXIT_SUCCESS;
 }
