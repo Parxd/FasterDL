@@ -16,7 +16,7 @@ RUN apt-get update &&  \
     && rm -rf /var/lib/apt/lists/*
 
 # Dir setup
-WORKDIR /app
+WORKDIR /workspaces
 # COPY . /app
 
 # Build
