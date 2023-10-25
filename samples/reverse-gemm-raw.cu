@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <cublas_v2.h>
 #include <cuda_runtime.h>
-#include "../utils/thrust_utils.h"
+#include "../utils/cublas_utils.h"
 
 using d_type = double;
 
