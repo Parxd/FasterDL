@@ -31,7 +31,7 @@ struct MSE {
 for the sake of truly understanding how partial derivatives are calculated
 and to see what computations can be reused when building up the computation
 graph engine later, this is an example of a function-less, object-less forward &
-backward run of a fully-connected neural net (2, 2)
+backward run of a one layer fully-connected
 
 uses example values from: 
 https://mattmazur.com/2015/03/17/a-step-by-step-backpropagation-example/
@@ -42,205 +42,206 @@ int main(int argc, char *argv[]) {
     CUBLAS_CHECK(cublasCreate(&cublasH));
     CUDA_CHECK(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
     CUBLAS_CHECK(cublasSetStream(cublasH, stream));
-
+    
     const d_type alpha = 1.0;
     const d_type gemm_beta = 0.0;
     const d_type geam_beta = 1.0;
     const d_type negate_geam_beta = -1.0;
 
-    thrust::host_vector<d_type> W1 = {0.15, 0.20, 0.25, 0.30}; // layer 1 weights
-    thrust::host_vector<d_type> W2 = {0.40, 0.45, 0.50, 0.55}; // layer 2 weights
-    thrust::host_vector<d_type> b1 = {0.35, 0.35}; 
-    thrust::host_vector<d_type> b2 = {0.60, 0.60};
-
-    thrust::host_vector<d_type> in = {0.05, 0.10};
-    thrust::host_vector<d_type> out1(2);
-    thrust::host_vector<d_type> out2(2);
-
-    // print_host_thrust(1, 2, in, 1);
-    // print_host_thrust(l1, l2, W1, l1);
-    thrust::device_vector<d_type> d_in = in;
-    thrust::device_vector<d_type> d_W1 = W1;
-    thrust::device_vector<d_type> d_W2 = W2;
-    thrust::device_vector<d_type> d_b1 = b1;
-    thrust::device_vector<d_type> d_b2 = b2;
-
-    thrust::device_vector<d_type> d_imdte_out1 = out1;
-    thrust::device_vector<d_type> d_imdte_out2 = out2;
-    thrust::device_vector<d_type> d_out1(2);
-    thrust::device_vector<d_type> d_out2(2);
-
-    const int m = 2;
-    const int n = 1;
-    const int k = 2;
-    // forward pass
+    thrust::device_vector<d_type> W = {0.10, 0.20, 0.30, 0.40, 0.50, 0.60}; // weights
+    thrust::device_vector<d_type> X = {0.20, 0.40, 0.30, 0.5, 0.5, 0.5};  // input
+    thrust::device_vector<d_type> b = {0.50, 0.20};  // bias
+    thrust::device_vector<d_type> Z(4);  // (WX + b)
+    thrust::device_vector<d_type> Y(2);  // sig(WX + b)
+    
+    // m, n, k refer to (m * k) x (k * n) = (m * n)
+    int m = 2;
+    int k = 3;
+    int n = 2;
     CUBLAS_CHECK(
         cublasDgemm(
             cublasH, 
+            CUBLAS_OP_T, 
             CUBLAS_OP_N, 
-            CUBLAS_OP_N, 
-            n, k, m, 
+            m, n, k,
             &alpha, 
-            thrust::raw_pointer_cast(&d_in[0]), n,
-            thrust::raw_pointer_cast(&d_W1[0]), m, 
+            thrust::raw_pointer_cast(&X[0]), k,
+            thrust::raw_pointer_cast(&W[0]), k, 
             &gemm_beta,
-            thrust::raw_pointer_cast(&d_imdte_out1[0]), n
+            thrust::raw_pointer_cast(&Z[0]), m
         )
     );
-    // cudaDeviceSynchronize();  // don't need this since we're using cublas stream?
-    /*
-    two cuBLAS possible calls to add bias vector:
-    */
-    // using geam will require a beta value of 1 to scale input B properly
-    //            important: remember that inputs are marked d_* to denote DEVICE matrix
-    //              ex. don't forget to use d_b1 (not b1), otherwise CUDA error 700
-    //            should probably use h_* for host stuff for best practice
-    const int a_rows = 1;
-    const int b_cols = 2;
-    CUBLAS_CHECK(
-        cublasDgeam(
-            cublasH,
-            CUBLAS_OP_N,
-            CUBLAS_OP_N,
-            a_rows, b_cols,
-            &alpha,
-            thrust::raw_pointer_cast(&d_imdte_out1[0]), a_rows,
-            &geam_beta,
-            thrust::raw_pointer_cast(&d_b1[0]), a_rows,
-            thrust::raw_pointer_cast(&d_out1[0]), a_rows
-        )
-    );
-    // using axpy will require the result to overwrite an input
+    print_device_thrust<d_type>(2, 2, Z, 2);
+    // // WTF--does cublas_op_t flag not explicitly transpose underlying matrix in memory???
+
+    // /*
+    // two cuBLAS possible calls to add bias vector:
+    // */
+    // // using geam will require a beta value of 1 to scale input B properly
+    // const int a_rows = 1;
+    // const int b_cols = 2;
     // CUBLAS_CHECK(
-    //     cublasDaxpy(
+    //     cublasDgeam(
     //         cublasH,
-    //         2,
+    //         CUBLAS_OP_N,
+    //         CUBLAS_OP_N,
+    //         a_rows, b_cols,
     //         &alpha,
-    //         thrust::raw_pointer_cast(&d_imdte_out1[0]), 1,
-    //         thrust::raw_pointer_cast(&d_b1[0]), 1
+    //         thrust::raw_pointer_cast(&Z[0]), a_rows,
+    //         &geam_beta,
+    //         thrust::raw_pointer_cast(&b[0]), a_rows,
+    //         thrust::raw_pointer_cast(&Z[0]), a_rows
     //     )
     // );
-    cudaStreamSynchronize(stream);  // sync here b/c don't know if thrust is synced with this stream
-    thrust::transform(
-        d_out1.begin(),
-        d_out1.end(),
-        d_out1.begin(),
-        Sigmoid()
-    );
-    // layer 2
-    CUBLAS_CHECK(
-        cublasDgemm(
-            cublasH, 
-            CUBLAS_OP_N, 
-            CUBLAS_OP_N, 
-            n, k, m, 
-            &alpha, 
-            thrust::raw_pointer_cast(&d_out1[0]), n,
-            thrust::raw_pointer_cast(&d_W2[0]), m, 
-            &gemm_beta,
-            thrust::raw_pointer_cast(&d_imdte_out2[0]), n
-        )
-    );
-    CUBLAS_CHECK(
-        cublasDgeam(
-            cublasH,
-            CUBLAS_OP_N,
-            CUBLAS_OP_N,
-            a_rows, b_cols,
-            &alpha,
-            thrust::raw_pointer_cast(&d_imdte_out2[0]), a_rows,
-            &geam_beta,
-            thrust::raw_pointer_cast(&d_b2[0]), a_rows,
-            thrust::raw_pointer_cast(&d_out2[0]), a_rows
-        )
-    );
-    cudaStreamSynchronize(stream);  // sync here b/c don't know if thrust is synced with this stream
-    thrust::transform(
-        d_out2.begin(),
-        d_out2.end(),
-        d_out2.begin(),
-        Sigmoid()
-    );
+    // // using axpy will require the result to overwrite an input
+    // // CUBLAS_CHECK(
+    // //     cublasDaxpy(
+    // //         cublasH,
+    // //         2,
+    // //         &alpha,
+    // //         thrust::raw_pointer_cast(&Z[0]), 1,
+    // //         thrust::raw_pointer_cast(&b[0]), 1
+    // //     )
+    // // );
+    // cudaStreamSynchronize(stream);  // sync here b/c don't know if thrust is synced with this stream
+    // thrust::transform(
+    //     Z.begin(),
+    //     Z.end(),
+    //     Y.begin(),
+    //     Sigmoid()
+    // );
 
-    // compute loss
-    thrust::device_vector<d_type> d_target = {0.01, 0.99};
-    thrust::device_vector<d_type> d_loss(2);
-    CUBLAS_CHECK(
-        cublasDgeam(
-            cublasH,
-            CUBLAS_OP_N,
-            CUBLAS_OP_N,
-            a_rows, b_cols,
-            &alpha,
-            thrust::raw_pointer_cast(&d_target[0]), a_rows,
-            &negate_geam_beta,
-            thrust::raw_pointer_cast(&d_out2[0]), a_rows,
-            thrust::raw_pointer_cast(&d_loss[0]), a_rows
-        )
-    );
-    cudaStreamSynchronize(stream);
-    thrust::transform(
-        d_loss.begin(),
-        d_loss.end(),
-        d_loss.begin(),
-        MSE()
-    );
-    d_type total_error;
-    CUBLAS_CHECK(
-        cublasDasum(
-            cublasH,
-            2, 
-            thrust::raw_pointer_cast(&d_loss[0]),
-            1,
-            &total_error
-        )
-    );
+    // // compute loss
+    // thrust::device_vector<d_type> target = {0.96596, 0.45926};
+    // thrust::device_vector<d_type> L(2);
+    // CUBLAS_CHECK(
+    //     cublasDgeam(
+    //         cublasH,
+    //         CUBLAS_OP_N,
+    //         CUBLAS_OP_N,
+    //         a_rows, b_cols,
+    //         &alpha,
+    //         thrust::raw_pointer_cast(&target[0]), a_rows,
+    //         &negate_geam_beta,
+    //         thrust::raw_pointer_cast(&Y[0]), a_rows,
+    //         thrust::raw_pointer_cast(&L[0]), a_rows
+    //     )
+    // );
+    // cudaStreamSynchronize(stream);
+    // thrust::transform(
+    //     L.begin(),
+    //     L.end(),
+    //     L.begin(),
+    //     MSE()
+    // );
     
-    // backward pass
-    // ∂(error) / ∂(output) -- derivative of MSE
-    thrust::device_vector<d_type> dEO(2);
-    CUBLAS_CHECK(
-        cublasDgeam(
-            cublasH,
-            CUBLAS_OP_N,
-            CUBLAS_OP_N,
-            a_rows, b_cols,
-            &alpha,
-            thrust::raw_pointer_cast(&d_out2[0]), a_rows,
-            &negate_geam_beta,
-            thrust::raw_pointer_cast(&d_target[0]), a_rows,
-            thrust::raw_pointer_cast(&dEO[0]), a_rows
-        )
-    );
-    // ∂(output) / ∂(net) -- derivative of activation function (sigmoid)
-    thrust::device_vector<d_type> dON(2);
-    thrust::device_vector<d_type> ones = {1, 1};
-    CUBLAS_CHECK(
-        cublasDgeam(
-            cublasH,
-            CUBLAS_OP_N,
-            CUBLAS_OP_N,
-            a_rows, b_cols,
-            &alpha,
-            thrust::raw_pointer_cast(&ones[0]), a_rows,
-            &negate_geam_beta,
-            thrust::raw_pointer_cast(&d_out2[0]), a_rows,
-            thrust::raw_pointer_cast(&dON[0]), a_rows
-        )
-    );
-    cudaStreamSynchronize(stream);
-    thrust::transform(
-        dON.begin(),
-        dON.end(),
-        d_out2.begin(),
-        dON.begin(),
-        thrust::multiplies<d_type>()
-    );
-    print_device_thrust<d_type>(1, 2, dON, 1);
-    // ∂(net) / ∂(weight) -- derivative of linear transformation (WX + B)
+    // // backward pass
+    // /*
+    // ∂L / ∂Y is the derivative of error with respect to Y
+    // - it is the vector {y_1_out - y_1_target, y_2_out - y_2_target} in this case
+    // */
+    // thrust::device_vector<d_type> dLdY(2);
+    // CUBLAS_CHECK(
+    //     cublasDgeam(
+    //         cublasH,
+    //         CUBLAS_OP_N,
+    //         CUBLAS_OP_N,
+    //         a_rows, b_cols,
+    //         &alpha,
+    //         thrust::raw_pointer_cast(&Y[0]), a_rows,
+    //         &negate_geam_beta,
+    //         thrust::raw_pointer_cast(&target[0]), a_rows,
+    //         thrust::raw_pointer_cast(&dLdY[0]), a_rows
+    //     )
+    // );
+    // /*
+    // ∂L / ∂Z is the derivative of error with respect to Z
+    // - it is equal to (∂L / ∂Y)(∂Y / ∂Z)
+    // - ∂Y / ∂Z = (Y)(1 - Y)
+    // - thus ∂L / ∂Z = (∂L / ∂Y)((Y)(1 - Y))
+    // */
+    // thrust::device_vector<d_type> ones(Y.size(), 1);
+    // thrust::device_vector<d_type> dYdZ(2);
+    // CUBLAS_CHECK(
+    //     cublasDgeam(
+    //         cublasH,
+    //         CUBLAS_OP_N,
+    //         CUBLAS_OP_N,
+    //         a_rows, b_cols,
+    //         &alpha,
+    //         thrust::raw_pointer_cast(&ones[0]), a_rows,
+    //         &negate_geam_beta,
+    //         thrust::raw_pointer_cast(&Y[0]), a_rows,
+    //         thrust::raw_pointer_cast(&dYdZ[0]), a_rows
+    //     )
+    // );
+    // cudaStreamSynchronize(stream);
+    // thrust::device_vector<d_type> dLdZ(2);
+    // thrust::transform(
+    //     dYdZ.begin(),
+    //     dYdZ.end(),
+    //     Y.begin(),
+    //     dYdZ.begin(),
+    //     thrust::multiplies<d_type>()
+    // );
+    // thrust::transform(
+    //     dLdY.begin(),
+    //     dLdY.end(),
+    //     dYdZ.begin(),
+    //     dLdZ.begin(),
+    //     thrust::multiplies<d_type>()
+    // );
+    // /*
+    // ∂L / ∂X is the derivative of error with respect to input X
+    // - it is equal to (∂L / ∂Z)(∂Z / ∂X)
+    // - (W^T)_rm x (∂L / ∂Z) = [(W^T)_cm x (∂L / ∂Z)]^T
+    // - the _rm specifies that (W^T) is the weight matrix in row-major
+    // - in other words, (W^T)_rm = (W)_cm and (W)_rm = (W^T)_cm
+    // - thus our equation is going to be (∂L / ∂Z) x (W^T)_cm
+    // */
+    // thrust::device_vector<d_type> dLdX(3);
+    // // (m * n) x (n * k)
+    // // but CUBLAS_OP_T applied afterwards, so... (m * k) x (k * n) = (m * n)
+    // m = 1;
+    // k = 2;
+    // n = 3;
+    // CUBLAS_CHECK(
+    //     cublasDgemm(
+    //         cublasH, 
+    //         CUBLAS_OP_N, 
+    //         CUBLAS_OP_T, 
+    //         m, n, k,
+    //         &alpha, 
+    //         thrust::raw_pointer_cast(&dLdZ[0]), m,
+    //         thrust::raw_pointer_cast(&W[0]), n, 
+    //         &gemm_beta,
+    //         thrust::raw_pointer_cast(&dLdX[0]), m
+    //     )
+    // );
+    // /*
+    // ∂L / ∂W is the derivative of error with respect to W
+    // - it is equal to (∂L / ∂Z)(∂Z / ∂W)
+    // - can imagine that it is pretty similar to ∂L / ∂X, since Z = WX + b
+    // - (∂L / ∂Z) x (X^T)_rm = [(X^T)_cm x (∂L / ∂Z)]^T
+    // */
+    // m = 1;
+    // k = 2;
+    // n = 3;
+    // CUBLAS_CHECK(
+    //     cublasDgemm(
+    //         cublasH, 
+    //         CUBLAS_OP_N, 
+    //         CUBLAS_OP_T, 
+    //         m, n, k,
+    //         &alpha, 
+    //         thrust::raw_pointer_cast(&dLdZ[0]), m,
+    //         thrust::raw_pointer_cast(&W[0]), n, 
+    //         &gemm_beta,
+    //         thrust::raw_pointer_cast(&dLdX[0]), m
+    //     )
+    // );
     
     CUBLAS_CHECK(cublasDestroy(cublasH));
     CUDA_CHECK(cudaStreamDestroy(stream));
-    
     return EXIT_SUCCESS;
 }

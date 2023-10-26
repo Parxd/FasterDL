@@ -24,12 +24,9 @@ int main(int argc, char *argv[]) {
     const int m = 3;
     const int n = 2;
     const int k = 2;
-    thrust::host_vector<d_type> W = {1, 2, 3, 4, 5, 6};
-    thrust::host_vector<d_type> X = {10, 11, 12, 13, 14, 15};
-    thrust::host_vector<d_type> Z(n * k);
-    thrust::device_vector<d_type> d_W = W;
-    thrust::device_vector<d_type> d_X = X;
-    thrust::device_vector<d_type> d_Z = Z;
+    thrust::device_vector<d_type> d_W = {1, 2, 3, 4, 5, 6};
+    thrust::device_vector<d_type> d_X = {10, 11, 12, 13, 14, 15};
+    thrust::device_vector<d_type> d_Z(n * k);
     // Reverse GEMM to compute (row-major) transposed Z
     CUBLAS_CHECK(
         cublasDgemm(
