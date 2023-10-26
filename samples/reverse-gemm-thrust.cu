@@ -2,10 +2,8 @@
 #include <cstdlib>
 #include <cublas_v2.h>
 #include <cuda_runtime.h>
-
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
-
 #include "../utils/cublas_utils.h"
 #include "../utils/thrust_utils.h"
 
