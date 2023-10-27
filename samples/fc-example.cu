@@ -259,7 +259,29 @@ int main(int argc, char *argv[]) {
     thrust::device_vector<d_type> dLdB = dLdZ;
     // --------------------------------------------------------------------------------
 
-    
+    // updating weights (w/o learning rate)
+
+    std::cout << "Old weights: \n";
+    print_device_thrust<d_type>(3, 2, W, 3);
+
+    m = 3;
+    n = 2;
+    CUBLAS_CHECK(
+        cublasDgeam(
+            cublasH,
+            CUBLAS_OP_N,
+            CUBLAS_OP_N,
+            m, n,
+            &alpha,
+            thrust::raw_pointer_cast(&W[0]), m,
+            &negate_geam_beta,
+            thrust::raw_pointer_cast(&dLdW[0]), m,
+            thrust::raw_pointer_cast(&W[0]), m
+        )
+    );
+
+    std::cout << "New weights: \n";
+    print_device_thrust<d_type>(3, 2, W, 3);
     
     CUBLAS_CHECK(cublasDestroy(cublasH));
     CUDA_CHECK(cudaStreamDestroy(stream));
