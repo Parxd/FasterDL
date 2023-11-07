@@ -1,6 +1,7 @@
 #ifndef FAST_STORAGE_HPP
 #define FAST_STORAGE_HPP
 
+#include <cstddef>
 #include "types.cuh"
 
 namespace fast {
@@ -17,7 +18,7 @@ namespace fast {
         size_t inc_refcnt();
         size_t dec_refcnt();
     private:
-        d_type buffer_ptr;
+        dtype* buffer_ptr;
         size_t size;
         size_t refs;
     };
