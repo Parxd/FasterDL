@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 project(main CUDA)
-set(CMAKE_CUDA_STANDARD 17)
+set(CMAKE_CUDA_STANDARD 20)
 
 add_executable(main samples/reverse-gemm-raw.cu)
 

@@ -6,9 +6,9 @@ int main(int argc, char* argv[]) {
     Scalar b(1.3984);
     Scalar c(6.3919);
     auto d = (a + b) * c;
+    d.backward();
+    std::cout << c._grad << "\n";
 
-    std::cout<<d._val<<"\n";
-    
     // d.backwards()
     // a._grad && b._grad && c._grad should be filled
 }
