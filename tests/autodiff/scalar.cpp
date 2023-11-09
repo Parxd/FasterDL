@@ -7,8 +7,8 @@ int main(int argc, char* argv[]) {
     Scalar c(6.3919);
     auto d = (a + b) * c;
     d.backward();
+    // a._grad && b._grad && c._grad should be non-zero
+    std::cout << a._grad << "\n";
+    std::cout << b._grad << "\n";
     std::cout << c._grad << "\n";
-
-    // d.backwards()
-    // a._grad && b._grad && c._grad should be filled
 }
