@@ -29,7 +29,7 @@ public:
         _grad = 1;
         // run ._backward() in topological sort vector
         for (auto &i : top_sort) {
-            std::cout << i._val << "\n";
+            // std::cout << i._val << "\n";
             i._backward();
         }
         // ...OR using dfs traversal
@@ -43,9 +43,6 @@ public:
     inline Scalar operator+(Scalar& other) {
         auto result = Scalar(_val + other._val, {*this, other});
         result._backward = [&]() {
-            // x + y = z
-            // dz / dx = 1
-            // dz / dy = 1
             _grad += result._grad;
             other._grad += result._grad;
         };
@@ -54,9 +51,6 @@ public:
     inline Scalar operator*(Scalar& other) {
         auto result = Scalar(_val * other._val, {*this, other});
         result._backward = [&]() {
-            // xy = z
-            // dz / dx = y
-            // dz / dy = x
             _grad += other._val * result._grad;
             other._grad += _val * result._grad;
         };
