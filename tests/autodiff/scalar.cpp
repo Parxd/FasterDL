@@ -26,7 +26,18 @@ void test2() {
     std::cout << e._grad << "\n";
 }
 
+void test3() {
+    std::cout << "\n--- Test 3 ---\n";
+    Scalar a(2.5391);
+    Scalar b(3);
+    Scalar c = a ^ b;
+    c.backward();
+    std::cout << a._grad << "\n";
+    std::cout << b._grad << "\n";
+}
+
 int main(int argc, char* argv[]) {
-    test1();
-    test2();
+    // test1();
+    // test2();
+    test3();
 }

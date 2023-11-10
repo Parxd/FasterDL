@@ -4,6 +4,7 @@
 #define SCALAR_HPP
 
 #include <set>
+#include <cmath>
 #include <queue>
 #include <vector>
 #include <functional>
@@ -48,11 +49,47 @@ public:
         };
         return result;
     }
+    inline Scalar operator-(Scalar& other) {
+
+    }
     inline Scalar operator*(Scalar& other) {
         auto result = Scalar(_val * other._val, {*this, other});
         result._backward = [&]() {
             _grad += other._val * result._grad;
             other._grad += _val * result._grad;
+        };
+        return result;
+    }
+    inline Scalar operator/(Scalar& other) {
+        
+    }
+    inline Scalar operator^(double expt) {
+        auto result = Scalar(std::pow(_val, expt), {*this});
+        result._backward = [&]() {
+            _grad += (expt * std::pow(_val, expt - 1)) * result._grad;
+            
+        };
+        return result;
+    }
+    inline Scalar operator^(Scalar& other) {
+        auto result = Scalar(std::pow(_val, other._val), {*this});
+        result._backward = [&]() {
+            _grad += (other._val * std::pow(_val, other._val - 1)) * result._grad;
+            other._grad += (std::log(_val) * result._val) * result._grad;
+        };
+        return result;
+    }
+    inline Scalar sigmoid() {
+        auto result = Scalar(1 / (1 + std::exp(-_val)), {*this});
+        result._backward = [&]() {
+            _grad += (result._val * (1 - result._val)) * result._grad;
+        };
+        return result;
+    }
+    inline Scalar relu() {
+        auto result = Scalar(std::max(0.0, _val), {*this});
+        result._backward = [&]() {
+            _grad += (int(bool(_val >= 0)) * 1) * result._grad;
         };
         return result;
     }
