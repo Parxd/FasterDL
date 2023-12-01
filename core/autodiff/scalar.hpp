@@ -15,7 +15,6 @@ public:
     double _val;
     double _grad;
     std::set<Scalar> _prev;
-    std::function<void()> _backward = []() {};
     // methods
     inline Scalar(double value): _val(value), _grad(0), _prev() {};
     ~Scalar() = default;
@@ -24,8 +23,7 @@ public:
         // build out DAG topological sort containing ALL previous nodes using bfs traversal
         std::set<Scalar> visited;
         std::vector<Scalar> top_sort;
-        std::queue<Scalar> bfs_queue;
-        find_children_bfs(*this, top_sort, visited, bfs_queue);
+        find_children_bfs(*this, top_sort, visited);
         // dz / dz = 1
         _grad = 1;
         // run ._backward() in topological sort vector
@@ -50,7 +48,12 @@ public:
         return result;
     }
     inline Scalar operator-(Scalar& other) {
-
+        auto result = Scalar(_val - other._val, {*this, other});
+        result._backward = [&]() {
+            _grad += result._grad;
+            other._grad -= result._grad;
+        };
+        return result;
     }
     inline Scalar operator*(Scalar& other) {
         auto result = Scalar(_val * other._val, {*this, other});
@@ -60,14 +63,10 @@ public:
         };
         return result;
     }
-    inline Scalar operator/(Scalar& other) {
-        
-    }
     inline Scalar operator^(double expt) {
         auto result = Scalar(std::pow(_val, expt), {*this});
-        result._backward = [&]() {
+        result._backward = [&, expt]() {
             _grad += (expt * std::pow(_val, expt - 1)) * result._grad;
-            
         };
         return result;
     }
@@ -98,8 +97,10 @@ public:
         return _val < other._val;
     }
 private:
+    std::function<void()> _backward = []() {};
     inline Scalar(double value, const std::set<Scalar>& previous): _val(value), _grad(0), _prev(previous) {}
-    void find_children_bfs(const Scalar& root, std::vector<Scalar>& sort, std::set<Scalar>& visited, std::queue<Scalar>& queue) {
+    void find_children_bfs(const Scalar& root, std::vector<Scalar>& sort, std::set<Scalar>& visited) {
+        std::queue<Scalar> queue;
         visited.insert(root);
         queue.push(root);
         while (queue.size()) {

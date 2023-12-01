@@ -1,10 +1,13 @@
 #include <iostream>
-#include "../../core/autodiff/graph/value.hpp"
-#include "../../core/autodiff/operators/add.hpp"
+#include "../../core/autodiff/value.hpp"
+
+void test1() {
+    std::cout << "\033[1;32m--- Test 1 ---\033[0m\n";
+    auto a = Value(305);
+    auto b = Value(123);
+    auto c = Value(401);
+}
 
 int main(int argc, char* argv[]) {
-    Value<double> val1(50.12905912);
-    Value<double> val2(20.01232213);
-    // val1 + val2
-    Add<double>(val1, val2);
+    test1();
 }

@@ -7,17 +7,23 @@ ENV CUDA_HOME=/usr/local/cuda
 ENV LD_LIBRARY_PATH=${CUDA_HOME}/lib64
 
 # Tools
-RUN apt-get update &&  \
+RUN apt-get update && \
     apt-get install -y \
     cmake \
     g++ \
     git \
     nano \
-    && rm -rf /var/lib/apt/lists/*
+    python3 \
+    pip \
+    && rm -rf /var/lib/apt/lists/
 
 # Dir setup
 WORKDIR /workspaces
 # COPY . /app
+
+# Set up CUPY
+RUN cd python && \
+    python3 -m venv accelerate
 
 # Build
 # RUN mkdir build && \
