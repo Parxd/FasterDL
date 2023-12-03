@@ -1,5 +1,5 @@
-# AccelerateAI
-A collection of GPU-accelerated deep learning algorithms using CUDA and CuPY.
+# FasterDL
+A CUDA tensor library with support for automatic differentiation.
 
 Follow my progress on this library on my blog [here]().
 
